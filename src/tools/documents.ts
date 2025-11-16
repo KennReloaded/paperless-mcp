@@ -3,13 +3,14 @@ import { z } from "zod";
 export function registerDocumentTools(server, api) {
   server.tool(
     "bulk_edit_documents",
-    "Perform bulk operations on multiple documents simultaneously: set correspondent/type/tags, delete, reprocess, merge, split, rotate, or manage permissions. Efficient for managing large document collections.",
+    "Perform bulk operations on multiple documents simultaneously: set title/correspondent/type/tags, delete, reprocess, merge, split, rotate, or manage permissions. Efficient for managing large document collections.",
     {
       documents: z.array(z.number()).describe("Array of document IDs to perform bulk operations on. Get document IDs from search_documents first."),
       method: z.enum([
         "set_correspondent",
         "set_document_type",
         "set_storage_path",
+        "set_title",
         "add_tag",
         "remove_tag",
         "modify_tags",
@@ -20,10 +21,11 @@ export function registerDocumentTools(server, api) {
         "split",
         "rotate",
         "delete_pages",
-      ]).describe("The bulk operation to perform: set_correspondent (assign sender/receiver), set_document_type (categorize documents), set_storage_path (organize file location), add_tag/remove_tag/modify_tags (manage labels), delete (permanently remove), reprocess (re-run OCR/indexing), set_permissions (control access), merge (combine documents), split (separate into multiple), rotate (adjust orientation), delete_pages (remove specific pages)"),
+      ]).describe("The bulk operation to perform: set_correspondent (assign sender/receiver), set_document_type (categorize documents), set_storage_path (organize file location), set_title (change document title), add_tag/remove_tag/modify_tags (manage labels), delete (permanently remove), reprocess (re-run OCR/indexing), set_permissions (control access), merge (combine documents), split (separate into multiple), rotate (adjust orientation), delete_pages (remove specific pages)"),
       correspondent: z.number().optional().describe("ID of correspondent to assign when method is 'set_correspondent'. Use list_correspondents to get valid IDs."),
       document_type: z.number().optional().describe("ID of document type to assign when method is 'set_document_type'. Use list_document_types to get valid IDs."),
       storage_path: z.number().optional().describe("ID of storage path to assign when method is 'set_storage_path'. Storage paths organize documents in folder hierarchies."),
+      title: z.string().optional().describe("New title to assign when method is 'set_title'. This will update the document title for all selected documents."),
       tag: z.number().optional().describe("Single tag ID to add or remove when method is 'add_tag' or 'remove_tag'. Use list_tags to get valid IDs."),
       add_tags: z.array(z.number()).optional().describe("Array of tag IDs to add when method is 'modify_tags'. Use list_tags to get valid IDs."),
       remove_tags: z.array(z.number()).optional().describe("Array of tag IDs to remove when method is 'modify_tags'. Use list_tags to get valid IDs."),
@@ -82,6 +84,27 @@ export function registerDocumentTools(server, api) {
     }
   );
 
+  server.tool(
+    "update_document",
+    "Update metadata for an existing document. Use this to edit document title, correspondent, type, tags, dates, and other properties after upload.",
+    {
+      id: z.number().describe("Document ID to update. Get this from search_documents or get_document results."),
+      title: z.string().optional().describe("New title for the document. This is displayed as the document name in Paperless."),
+      content: z.string().optional().describe("Document content text. Normally auto-extracted by OCR, but can be manually edited if needed."),
+      created: z.string().optional().describe("Document creation date in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss). The date the document was originally created, not when it was uploaded."),
+      correspondent: z.number().nullable().optional().describe("ID of correspondent (sender/receiver). Use list_correspondents to find valid IDs. Set to null to remove correspondent."),
+      document_type: z.number().nullable().optional().describe("ID of document type for categorization. Use list_document_types to find valid IDs. Set to null to remove document type."),
+      storage_path: z.number().nullable().optional().describe("ID of storage path for file organization. Set to null to use default storage location."),
+      tags: z.array(z.number()).optional().describe("Complete array of tag IDs. This replaces all existing tags. Use list_tags to find valid IDs."),
+      archive_serial_number: z.string().nullable().optional().describe("Custom archive reference number. Set to null to remove."),
+      custom_fields: z.array(z.number()).optional().describe("Array of custom field IDs. Replaces existing custom fields."),
+    },
+    async (args, extra) => {
+      if (!api) throw new Error("Please configure API connection first");
+      const { id, ...updateData } = args;
+      return api.updateDocument(id, updateData);
+    }
+  );
 
   server.tool(
     "get_document",
