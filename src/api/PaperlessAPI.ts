@@ -103,14 +103,26 @@ export class PaperlessAPI {
   }
 
   async getDocument(id) {
-    return this.request(`/documents/${id}/`);
+    const response: any = await this.request(`/documents/${id}/`);
+    // Filter out content field and long URLs to reduce token usage
+    const { content, download_url, thumbnail_url, ...rest } = response;
+    return {
+      ...rest,
+      id: response.id,
+    };
   }
 
   async updateDocument(id, data) {
-    return this.request(`/documents/${id}/`, {
+    const response: any = await this.request(`/documents/${id}/`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
+    // Filter out content field and long URLs to reduce token usage
+    const { content, download_url, thumbnail_url, ...rest } = response;
+    return {
+      ...rest,
+      id: response.id,
+    };
   }
 
   async searchDocuments(query, page?, pageSize?) {
