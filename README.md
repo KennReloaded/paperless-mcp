@@ -54,6 +54,8 @@ Here are some things you can ask Claude to do:
 
 - "Show me all documents tagged as 'Invoice'"
 - "Search for documents containing 'tax return'"
+- "Update the title of document #123 to 'Q4 Tax Return'"
+- "Change the titles of documents 45, 46, and 47 to 'Monthly Report'"
 - "Create a new tag called 'Receipts' with color #FF0000"
 - "Download document #123"
 - "List all correspondents"
@@ -121,6 +123,7 @@ Perform bulk operations on multiple documents.
 Parameters:
 - documents: Array of document IDs
 - method: One of:
+  - set_title: Set title for documents
   - set_correspondent: Set correspondent for documents
   - set_document_type: Set document type for documents
   - set_storage_path: Set storage path for documents
@@ -135,6 +138,7 @@ Parameters:
   - rotate: Rotate document pages
   - delete_pages: Delete specific pages from a document
 - Additional parameters based on method:
+  - title: String for set_title
   - correspondent: ID for set_correspondent
   - document_type: ID for set_document_type
   - storage_path: ID for set_storage_path
@@ -149,6 +153,13 @@ Parameters:
 
 Examples:
 ```typescript
+// Set title for multiple documents
+bulk_edit_documents({
+  documents: [1, 2, 3],
+  method: "set_title",
+  title: "Monthly Report - Q4 2024"
+})
+
 // Add a tag to multiple documents
 bulk_edit_documents({
   documents: [1, 2, 3],
@@ -212,6 +223,45 @@ post_document({
   document_type: 2,
   tags: [1, 3],
   archive_serial_number: "2024-001"
+})
+```
+
+#### update_document
+Update metadata for an existing document.
+
+Parameters:
+- id: Document ID
+- title (optional): New title for the document
+- content (optional): Document content text
+- created (optional): Document creation date in ISO format
+- correspondent (optional): ID of correspondent (set to null to remove)
+- document_type (optional): ID of document type (set to null to remove)
+- storage_path (optional): ID of storage path (set to null to remove)
+- tags (optional): Complete array of tag IDs (replaces all existing tags)
+- archive_serial_number (optional): Archive serial number (set to null to remove)
+- custom_fields (optional): Array of custom field IDs
+
+```typescript
+// Update just the title
+update_document({
+  id: 123,
+  title: "Updated Invoice Title"
+})
+
+// Update multiple fields at once
+update_document({
+  id: 456,
+  title: "Q4 2024 Tax Return",
+  correspondent: 5,
+  document_type: 3,
+  tags: [1, 2, 7]
+})
+
+// Remove correspondent and update title
+update_document({
+  id: 789,
+  title: "Personal Document",
+  correspondent: null
 })
 ```
 
