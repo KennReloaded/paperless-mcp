@@ -103,14 +103,20 @@ export class PaperlessAPI {
   }
 
   async getDocument(id) {
-    return this.request(`/documents/${id}/`);
+    const response: any = await this.request(`/documents/${id}/`);
+    // Filter out content field to prevent MCP SDK errors
+    const { content, ...rest } = response;
+    return rest;
   }
 
   async updateDocument(id, data) {
-    return this.request(`/documents/${id}/`, {
+    const response: any = await this.request(`/documents/${id}/`, {
       method: "PATCH",
       body: JSON.stringify(data),
     });
+    // Filter out content field to prevent MCP SDK errors
+    const { content, ...rest } = response;
+    return rest;
   }
 
   async searchDocuments(query, page?, pageSize?) {
